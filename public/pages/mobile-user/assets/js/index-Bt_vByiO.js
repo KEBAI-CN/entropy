@@ -1,0 +1,1 @@
+import o from"./mobile-DWP2vACG.js";import{d as e,h as r,q as t}from"./vendor-core-BMj0EvR1.js";import"./index.vue_vue_type_script_setup_true_lang-r_Ms6JXu.js";import"./vendor-icons-CcMvcF3z.js";import"./knowledge-DyTEdE6F.js";import"./index-hwcU1_cs.js";import"./vendor-arco-BYuxjO_j.js";const l=e({__name:"index",setup(p){return(m,i)=>(r(),t(o))}});export{l as default};

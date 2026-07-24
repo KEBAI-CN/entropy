@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>等待支付</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 50%, #eff6ff 100%);
+            color: #111827;
+        }
+        .card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .94);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, .12);
+            padding: 28px 22px;
+            text-align: center;
+        }
+        .loader {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 18px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        .loader span {
+            display: block;
+            border-radius: 10px;
+            background: #2563eb;
+            animation: squarePulse 1.05s ease-in-out infinite;
+        }
+        .loader span:nth-child(2) { animation-delay: .12s; }
+        .loader span:nth-child(3) { animation-delay: .24s; }
+        .loader span:nth-child(4) { animation-delay: .36s; }
+        .success-icon {
+            display: none;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 18px;
+            border-radius: 999px;
+            background: #22c55e;
+            color: #fff;
+            font-size: 30px;
+            line-height: 48px;
+        }
+        h1 {
+            margin: 0 0 8px;
+            font-size: 22px;
+            line-height: 1.35;
+        }
+        p {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .info {
+            margin: 18px 0;
+            padding: 12px;
+            border-radius: 14px;
+            background: #f8fafc;
+            text-align: left;
+            font-size: 13px;
+            color: #475569;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 4px 0;
+        }
+        .row span:last-child {
+            text-align: right;
+            word-break: break-all;
+        }
+        .actions {
+            display: grid;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 13px 16px;
+            border: 0;
+            border-radius: 14px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            touch-action: manipulation;
+        }
+        .btn.secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .tip {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .paid .loader { display: none; }
+        .paid .success-icon { display: block; }
+        @keyframes squarePulse {
+            0%, 100% {
+                transform: scale(.72);
+                opacity: .45;
+            }
+            50% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .loader span { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <main id="page" class="card" data-order-no="{$orderNo|htmlentities}" data-pay-url="{$payUrl|htmlentities}">
+        <div class="loader" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h1 id="title">等待支付</h1>
+        <p id="statusText">支付页面已在新标签打开，请完成支付后回到本页。本页会自动检查支付结果。</p>
+        <div class="info">
+            {notempty name="orderNo"}<div class="row"><span>订单号</span><span>{$orderNo|htmlentities}</span></div>{/notempty}
+            {notempty name="productName"}<div class="row"><span>商品</span><span>{$productName|htmlentities}</span></div>{/notempty}
+            {notempty name="amount"}<div class="row"><span>金额</span><span>￥{$amount|htmlentities}</span></div>{/notempty}
+        </div>
+        <div class="actions">
+            <a id="payButton" class="btn" href="javascript:void(0)" target="_blank" rel="noreferrer noopener">重新打开支付页面</a>
+            <a id="orderButton" class="btn secondary" href="javascript:void(0)">查看订单详情</a>
+        </div>
+        <div id="tip" class="tip">正在检查支付状态…</div>
+    </main>
+    <script>
+        (function () {
+            var page = document.getElementById('page');
+            var orderNo = page ? (page.getAttribute('data-order-no') || '') : '';
+            var payUrl = page ? (page.getAttribute('data-pay-url') || '') : '';
+            payUrl = payUrl.replace(/&amp;/g, '&').replace(/([?&])amp;/g, '$1');
+            var checkUrl = '/api/payment/check?order_no=' + encodeURIComponent(orderNo || '');
+            var orderUrl = '/order/detail/' + encodeURIComponent(orderNo || '');
+            var title = document.getElementById('title');
+            var statusText = document.getElementById('statusText');
+            var tip = document.getElementById('tip');
+            var payButton = document.getElementById('payButton');
+            var orderButton = document.getElementById('orderButton');
+            var timer = null;
+            var opened = false;
+
+            function setText(el, text) {
+                if (el) el.textContent = text;
+            }
+
+            function isWalletRecharge(data) {
+                var type = String((data && data.type) || '').toLowerCase();
+                return type === 'deposit' || orderNo.indexOf('DEP') === 0 || orderNo.indexOf('OP') === 0;
+            }
+
+            function isDockingRecharge(data) {
+                var type = String((data && data.type) || '').toLowerCase();
+                return type === 'recharge' || type === 'docking' || orderNo.indexOf('DR') === 0;
+            }
+
+            function getRedirectUrl(data) {
+                if (data && data.redirect_url) return String(data.redirect_url);
+                if (isWalletRecharge(data)) {
+                    return '/user/wallet/balance?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+                }
+                if (isDockingRecharge(data)) {
+                    return '/distribution/center?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+                }
+                return orderUrl;
+            }
+
+            function applyInitialActionState() {
+                if (isWalletRecharge({})) {
+                    orderUrl = getRedirectUrl({ type: 'deposit' });
+                    if (orderButton) {
+                        orderButton.href = orderUrl;
+                        setText(orderButton, '返回我的余额');
+                    }
+                } else if (isDockingRecharge({})) {
+                    orderUrl = getRedirectUrl({ type: 'recharge' });
+                    if (orderButton) {
+                        orderButton.href = orderUrl;
+                        setText(orderButton, '返回分销中心');
+                    }
+                }
+            }
+
+            function openPayPage() {
+                if (!payUrl) return;
+                var win = window.open(payUrl, '_blank', 'noopener,noreferrer');
+                if (!win) {
+                    setText(statusText, '浏览器拦截了新标签，请点击下方按钮打开支付页面。');
+                    setText(tip, '打开支付后，本页会继续自动检查支付状态。');
+                } else {
+                    opened = true;
+                }
+            }
+
+            function markPaid(data) {
+                if (timer) window.clearInterval(timer);
+                if (page) page.classList.add('paid');
+                orderUrl = getRedirectUrl(data || {});
+                if (orderButton) {
+                    orderButton.href = orderUrl;
+                }
+                if (isWalletRecharge(data)) {
+                    setText(title, '充值成功');
+                    setText(statusText, '充值已到账户，即将返回我的余额。');
+                    if (orderButton) setText(orderButton, '返回我的余额');
+                } else if (isDockingRecharge(data)) {
+                    setText(title, '充值成功');
+                    setText(statusText, '对接余额已到账，即将返回分销中心。');
+                    if (orderButton) setText(orderButton, '返回分销中心');
+                } else {
+                    setText(title, '支付成功');
+                    setText(statusText, '订单已支付成功，即将跳转订单详情。');
+                    if (orderButton) setText(orderButton, '查看订单详情');
+                }
+                setText(tip, '支付状态已确认');
+                if (orderNo) {
+                    window.setTimeout(function () {
+                        window.location.href = orderUrl;
+                    }, 1200);
+                }
+            }
+
+            function checkStatus() {
+                if (!orderNo) return;
+                fetch(checkUrl, { credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (res) {
+                        var data = res && res.data ? res.data : {};
+                        var status = String(data.status || '').toLowerCase();
+                        if (status === 'paid' || status === 'pending_shipment') {
+                            if (!isWalletRecharge(data) && !isDockingRecharge(data) && data.detail_access_token) {
+                                orderUrl = '/order/detail/' + encodeURIComponent(orderNo || '') + '?access_token=' + encodeURIComponent(String(data.detail_access_token));
+                                if (orderButton) {
+                                    orderButton.href = orderUrl;
+                                }
+                            }
+                            markPaid(data);
+                            return;
+                        }
+                        setText(tip, opened ? '等待支付完成，正在自动检查…' : '等待打开支付页面，正在自动检查…');
+                    })
+                    .catch(function () {
+                        setText(tip, '检查支付状态失败，稍后会自动重试…');
+                    });
+            }
+
+            if (payButton) {
+                payButton.href = payUrl || 'javascript:void(0)';
+                payButton.addEventListener('click', function () {
+                    opened = true;
+                    setText(statusText, '支付页面已打开，请完成支付后回到本页。');
+                    setText(tip, '等待支付完成，正在自动检查…');
+                });
+            }
+            if (orderButton) {
+                orderButton.href = orderUrl;
+            }
+            applyInitialActionState();
+
+            window.setTimeout(openPayPage, 300);
+            checkStatus();
+            timer = window.setInterval(checkStatus, 3000);
+        })();
+    </script>
+</body>
+</html>

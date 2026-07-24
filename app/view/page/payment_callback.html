@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>支付结果</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+            background: #f7f8fa;
+            color: #1d2129;
+        }
+        .card {
+            width: 100%;
+            max-width: 420px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #e5e6eb;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+            padding: 24px 20px 20px;
+        }
+        .hero {
+            display: grid;
+            justify-items: center;
+            text-align: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .hero-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f3ff;
+            color: #165dff;
+        }
+        .loader {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+        .loader span {
+            display: block;
+            border-radius: 6px;
+            background: #2563eb;
+            animation: squarePulse 1.05s ease-in-out infinite;
+        }
+        .loader span:nth-child(2) { animation-delay: .12s; }
+        .loader span:nth-child(3) { animation-delay: .24s; }
+        .loader span:nth-child(4) { animation-delay: .36s; }
+        .status-icon {
+            display: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 18px;
+            line-height: 28px;
+            text-align: center;
+        }
+        .success .hero-badge {
+            background: #e8ffea;
+            color: #00b42a;
+        }
+        .fail .hero-badge {
+            background: #ffece8;
+            color: #f53f3f;
+        }
+        .success .status-icon,
+        .fail .status-icon { display: block; }
+        .success .loader,
+        .fail .loader { display: none; }
+        h1 {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+        p {
+            margin: 0;
+            color: #86909c;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .info {
+            margin: 0 0 16px;
+            padding: 6px 16px;
+            border-radius: 12px;
+            background: #f7f8fa;
+            border: 1px solid #f2f3f5;
+            font-size: 13px;
+            color: #4e5969;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e6eb;
+        }
+        .row:last-child {
+            border-bottom: none;
+        }
+        .row span:last-child {
+            text-align: right;
+            word-break: break-all;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .btn {
+            flex: 1;
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 16px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: #165dff;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            touch-action: manipulation;
+            transition: all .18s ease;
+        }
+        .btn.secondary {
+            background: #fff;
+            color: #4e5969;
+            border-color: #c9cdd4;
+        }
+        .btn:active {
+            opacity: .92;
+        }
+        .tip {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #86909c;
+            text-align: center;
+        }
+        @keyframes squarePulse {
+            0%, 100% { transform: scale(.72); opacity: .45; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .loader span { animation: none; }
+        }
+        @media (max-width: 480px) {
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main id="page" class="card" data-order-no="{$orderNo|htmlentities}">
+        <div class="hero">
+            <div class="hero-badge" aria-hidden="true">
+                <div class="loader">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div id="statusIcon" class="status-icon" aria-hidden="true">✓</div>
+            </div>
+            <h1 id="title">正在处理支付结果</h1>
+            <p id="statusText">请稍候，正在校验支付平台回调签名并确认订单状态。</p>
+        </div>
+        <div class="info">
+            {notempty name="orderNo"}<div class="row"><span>订单号</span><span>{$orderNo|htmlentities}</span></div>{/notempty}
+        </div>
+        <div class="actions">
+            <a id="detailButton" class="btn" href="javascript:void(0)">查看订单详情</a>
+            <a id="searchButton" class="btn secondary" href="/order/search">返回订单查询</a>
+        </div>
+        <div id="tip" class="tip">正在查询支付状态…</div>
+    </main>
+    <script>
+        (function () {
+            var page = document.getElementById('page');
+            var orderNo = page ? (page.getAttribute('data-order-no') || '') : '';
+            var detailUrl = orderNo ? ('/order/detail/' + encodeURIComponent(orderNo)) : '/order/search';
+            var checkUrl = '/api/payment/check' + window.location.search;
+            var title = document.getElementById('title');
+            var statusText = document.getElementById('statusText');
+            var tip = document.getElementById('tip');
+            var statusIcon = document.getElementById('statusIcon');
+            var detailButton = document.getElementById('detailButton');
+            var searchButton = document.getElementById('searchButton');
+
+            function setText(el, text) {
+                if (el) el.textContent = text;
+            }
+
+            function isWalletRecharge(data) {
+                var type = String((data && data.type) || '').toLowerCase();
+                return type === 'deposit' || orderNo.indexOf('DEP') === 0 || orderNo.indexOf('OP') === 0;
+            }
+
+            function isDockingRecharge(data) {
+                var type = String((data && data.type) || '').toLowerCase();
+                return type === 'recharge' || type === 'docking' || orderNo.indexOf('DR') === 0;
+            }
+
+            function getRedirectUrl(data) {
+                if (data && data.redirect_url) return String(data.redirect_url);
+                if (isWalletRecharge(data)) {
+                    return '/user/wallet/balance?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+                }
+                if (isDockingRecharge(data)) {
+                    return '/distribution/center?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+                }
+                return detailUrl;
+            }
+
+            function applyInitialActionState() {
+                if (isWalletRecharge({})) {
+                    detailUrl = getRedirectUrl({ type: 'deposit' });
+                    if (detailButton) {
+                        detailButton.href = detailUrl;
+                        setText(detailButton, '返回我的余额');
+                    }
+                    if (searchButton) {
+                        searchButton.href = '/user/wallet/balance';
+                        setText(searchButton, '进入用户中心');
+                    }
+                } else if (isDockingRecharge({})) {
+                    detailUrl = getRedirectUrl({ type: 'recharge' });
+                    if (detailButton) {
+                        detailButton.href = detailUrl;
+                        setText(detailButton, '返回分销中心');
+                    }
+                    if (searchButton) {
+                        searchButton.href = '/distribution/center';
+                        setText(searchButton, '返回分销中心');
+                    }
+                }
+            }
+
+            function applySuccessState(data) {
+                detailUrl = getRedirectUrl(data || {});
+                if (detailButton) {
+                    detailButton.href = detailUrl;
+                }
+
+                if (isWalletRecharge(data)) {
+                    setText(title, '充值成功');
+                    setText(statusText, '充值已到账户，即将返回我的余额。');
+                    setText(tip, '支付状态已确认，充值单已处理');
+                    if (detailButton) setText(detailButton, '返回我的余额');
+                    if (searchButton) {
+                        searchButton.href = '/user/wallet/balance';
+                        setText(searchButton, '进入用户中心');
+                    }
+                    return;
+                }
+
+                if (isDockingRecharge(data)) {
+                    setText(title, '充值成功');
+                    setText(statusText, '对接余额已到账，即将返回分销中心。');
+                    setText(tip, '支付状态已确认，充值单已处理');
+                    if (detailButton) setText(detailButton, '返回分销中心');
+                    if (searchButton) {
+                        searchButton.href = '/distribution/center';
+                        setText(searchButton, '返回分销中心');
+                    }
+                    return;
+                }
+
+                setText(title, '支付成功');
+                setText(statusText, '支付结果已确认，即将跳转订单详情。');
+                setText(tip, '签名校验通过，订单状态已确认');
+                if (detailButton) setText(detailButton, '查看订单详情');
+                if (searchButton) {
+                    searchButton.href = '/order/search';
+                    setText(searchButton, '返回订单查询');
+                }
+            }
+
+            function markSuccess(data) {
+                if (page) page.classList.add('success');
+                if (statusIcon) statusIcon.textContent = '✓';
+                applySuccessState(data || {});
+                window.setTimeout(function () {
+                    window.location.href = detailUrl;
+                }, 1200);
+            }
+
+            function markPending() {
+                setText(title, '支付处理中');
+                setText(statusText, '已收到支付平台回调，正在等待支付状态确认。');
+                setText(tip, '正在自动重试查询…');
+            }
+
+            function markFail() {
+                if (page) page.classList.add('fail');
+                if (statusIcon) statusIcon.textContent = '!';
+                setText(title, '支付结果校验失败');
+                setText(statusText, '支付回调签名或订单状态未通过校验，请返回订单查询确认结果。');
+                setText(tip, '未直接放行跳转');
+            }
+
+            function checkStatusOnce() {
+                return fetch(checkUrl, { credentials: 'same-origin' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (res) {
+                        var data = res && res.data ? res.data : {};
+                        var status = String(data.status || '').toLowerCase();
+                        if (status === 'paid' || status === 'pending_shipment') {
+                            if (!isWalletRecharge(data) && !isDockingRecharge(data) && data.detail_access_token) {
+                                detailUrl = '/order/detail/' + encodeURIComponent(orderNo) + '?access_token=' + encodeURIComponent(String(data.detail_access_token));
+                                if (detailButton) {
+                                    detailButton.href = detailUrl;
+                                }
+                            }
+                            markSuccess(data);
+                            return true;
+                        }
+                        if (res && Number(res.code) === 200) {
+                            markPending();
+                            return false;
+                        }
+                        markFail();
+                        return true;
+                    })
+                    .catch(function () {
+                        markPending();
+                        return false;
+                    });
+            }
+
+            if (detailButton) {
+                detailButton.href = detailUrl;
+            }
+            applyInitialActionState();
+
+            checkStatusOnce().then(function (done) {
+                if (done) return;
+                var count = 0;
+                var timer = window.setInterval(function () {
+                    count += 1;
+                    checkStatusOnce().then(function (finished) {
+                        if (finished || count >= 24) {
+                            window.clearInterval(timer);
+                            if (!finished) markFail();
+                        }
+                    });
+                }, 2000);
+            });
+        })();
+    </script>
+</body>
+</html>

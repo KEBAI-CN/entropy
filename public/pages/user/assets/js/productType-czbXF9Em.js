@@ -1,0 +1,1 @@
+var a={CARD:1,PHYSICAL:2,KNOWLEDGE:3},e=[{label:"卡密",value:a.CARD},{label:"实物",value:a.PHYSICAL},{label:"知识",value:a.KNOWLEDGE}],l=e.reduce((a,e)=>(a[e.value]=e.label,a),{}),u=a=>l[Number(a)]||"卡密";export{u as n,e as r,a as t};

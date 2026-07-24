@@ -1,0 +1,46 @@
+{
+  "_rolldown-runtime-NMqb_1LM.js": {
+    "file": "assets/js/rolldown-runtime-NMqb_1LM.js",
+    "name": "rolldown-runtime"
+  },
+  "_vendor-arco-It4oFdYg.css": {
+    "file": "assets/css/vendor-arco-It4oFdYg.css",
+    "src": "_vendor-arco-It4oFdYg.css"
+  },
+  "_vendor-arco-cyifokN2.js": {
+    "file": "assets/js/vendor-arco-cyifokN2.js",
+    "name": "vendor-arco",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js"
+    ],
+    "css": [
+      "assets/css/vendor-arco-It4oFdYg.css"
+    ]
+  },
+  "_vendor-core-DDNkNYl5.js": {
+    "file": "assets/js/vendor-core-DDNkNYl5.js",
+    "name": "vendor-core",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-cyifokN2.js"
+    ]
+  },
+  "shop-template.html": {
+    "file": "assets/js/index-CdyL-m6A.js",
+    "name": "index",
+    "src": "shop-template.html",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-cyifokN2.js",
+      "_vendor-core-DDNkNYl5.js"
+    ],
+    "dynamicImports": [
+      "_vendor-core-DDNkNYl5.js",
+      "shop-template.html"
+    ],
+    "css": [
+      "assets/css/index-X4-PdIyv.css"
+    ]
+  }
+}

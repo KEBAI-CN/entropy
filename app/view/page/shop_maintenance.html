@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{$statusText|htmlentities} - {$shopName|htmlentities}</title>
+    {notempty name="favicon"}<link rel="icon" href="{$favicon|htmlentities}">{/notempty}
+    <style>
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #1d2129;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(22, 93, 255, .08), transparent 30%),
+                linear-gradient(180deg, #f6f9ff 0%, #ffffff 54%, #f7f8fa 100%);
+        }
+        .page {
+            width: min(440px, 100%);
+            text-align: center;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-height: 38px;
+            margin-bottom: 28px;
+            color: #1d2129;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .brand img {
+            width: auto;
+            max-width: 128px;
+            max-height: 34px;
+            object-fit: contain;
+            display: block;
+        }
+        .brand-title {
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card {
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .98);
+            padding: 34px 24px 26px;
+        }
+        .state-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 18px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e8f3ff, #f2f7ff);
+            color: #165dff;
+        }
+        .state-avatar {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        .state-icon-fallback-content {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+        }
+        .state-avatar + .state-icon-fallback-content {
+            display: none;
+        }
+        .state-icon svg {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+        .state-icon.is-banned {
+            background: #fff1f0;
+            color: #f53f3f;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            line-height: 1.35;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+        .shop-name {
+            margin-top: 8px;
+            color: #4e5969;
+            font-size: 14px;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .reason {
+            margin: 18px 0 0;
+            color: #86909c;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 26px;
+        }
+        .btn {
+            flex: 1;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #1d2129;
+            background: #f2f3f5;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background .18s ease, color .18s ease, transform .18s ease;
+        }
+        .btn:hover { background: #e5e6eb; }
+        .btn:active { transform: translateY(1px); }
+        .btn.primary {
+            background: #165dff;
+            color: #fff;
+        }
+        .btn.primary:hover { background: #0e42d2; }
+        .tip {
+            margin-top: 18px;
+            color: #c9cdd4;
+            font-size: 12px;
+        }
+        @media (max-width: 480px) {
+            body {
+                align-items: flex-start;
+                padding-top: calc(env(safe-area-inset-top) + 54px);
+                background: #f7f8fa;
+            }
+            .brand { margin-bottom: 22px; }
+            .brand-title { max-width: 180px; }
+            .card { padding: 30px 20px 24px; }
+            h1 { font-size: 22px; }
+            .actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="brand">
+            {notempty name="siteLogo"}
+                <img src="{$siteLogo|htmlentities}" alt="{$siteName|htmlentities}" onerror="this.style.display='none'">
+            {/notempty}
+            <span class="brand-title">{$siteName|htmlentities}</span>
+        </div>
+        <section class="card" role="status" aria-live="polite">
+            <div class="{$stateIconClass|default='state-icon'|htmlentities}" aria-hidden="true">
+                {notempty name="shopAvatar"}
+                    <img class="state-avatar" src="{$shopAvatar|htmlentities}" alt="" onerror="this.remove()">
+                {/notempty}
+                <span class="state-icon-fallback-content">
+                {if condition="$isBanned"}
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4 4 12.954 4 24s8.954 20 20 20Z"/>
+                        <path d="M13.858 13.858 34.142 34.142"/>
+                    </svg>
+                {else /}
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 8h18l3 10v20a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V18l3-10Z"/>
+                        <path d="M12 18h24"/>
+                        <path d="M19 27h10"/>
+                    </svg>
+                {/if}
+                </span>
+            </div>
+            <h1>{$statusText|htmlentities}</h1>
+            <div class="shop-name">{$shopName|htmlentities}</div>
+            <p class="reason">{$statusReason|htmlentities}</p>
+            <div class="actions">
+                <a class="btn primary" href="/">返回首页</a>
+                <a class="btn" href="/order/search">查询订单</a>
+            </div>
+            <div class="tip">页面将在店铺恢复后自动开放访问</div>
+        </section>
+    </main>
+</body>
+</html>

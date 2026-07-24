@@ -1,0 +1,22 @@
+.shop-plugin-slot-host {
+  width: 100%;
+  min-width: 0;
+}
+
+.shop-plugin-slot-host[data-plugin-slot="shop.home.header.after"],
+.shop-plugin-slot-host[data-plugin-slot="shop.home.category.after"],
+.shop-plugin-slot-host[data-plugin-slot="shop.home.productList.before"] {
+  margin: 12px 0;
+}
+
+.shop-plugin-slot-host[data-plugin-slot="shop.home.productCard.extra"] {
+  margin-top: 8px;
+}
+
+.shop-plugin-slot-host[data-plugin-slot="shop.order.confirm.extra"] {
+  margin: 12px 0;
+}
+
+.shop-plugin-slot-item {
+  min-width: 0;
+}

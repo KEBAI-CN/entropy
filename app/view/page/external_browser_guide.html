@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>请在浏览器中打开</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      color: #0f172a;
+      background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 46%, #ffffff 100%);
+    }
+    .guide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: max(24px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+    }
+    .top {
+      position: relative;
+      min-height: 220px;
+      padding-top: 10px;
+      text-align: right;
+    }
+    .tip {
+      display: inline-block;
+      max-width: 280px;
+      padding: 16px 18px;
+      margin-right: 18px;
+      text-align: left;
+      color: #ffffff;
+      background: #165dff;
+      border-radius: 18px;
+      box-shadow: 0 18px 36px rgba(22, 93, 255, 0.25);
+    }
+    .tip p {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.7;
+      font-weight: 600;
+    }
+    .menu-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      margin: 0 4px;
+      color: #165dff;
+      background: #ffffff;
+      border-radius: 999px;
+      font-size: 22px;
+      line-height: 1;
+      vertical-align: middle;
+    }
+    .arrow {
+      position: absolute;
+      top: 8px;
+      right: 0;
+      font-size: 56px;
+      transform: rotate(12deg);
+      filter: drop-shadow(0 10px 18px rgba(15, 23, 42, 0.18));
+    }
+    .card {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px 22px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+      backdrop-filter: blur(16px);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      margin-bottom: 16px;
+      border-radius: 18px;
+      background: rgba(22, 93, 255, 0.1);
+      color: #165dff;
+      font-size: 28px;
+      font-weight: 800;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+    .desc {
+      margin: 0;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    .subdesc {
+      margin: 10px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .actions {
+      margin-top: 22px;
+    }
+    .copy-btn {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-radius: 999px;
+      background: #165dff;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 16px 36px rgba(22, 93, 255, 0.24);
+    }
+    .url {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.6;
+      word-break: break-all;
+      text-align: left;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      padding: 10px 16px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.88);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <main class="guide">
+    <section class="top">
+      <div class="tip">
+        <p>点击右上角 <span class="menu-icon">⋯</span> {$actionText}</p>
+        <p>可以继续浏览本站哦~</p>
+      </div>
+      <div class="arrow">☝</div>
+    </section>
+
+    <section class="card">
+      <div class="badge">↗</div>
+      <h1>检测到您正在使用应用内置浏览器</h1>
+      <p class="desc">请切换到{$targetBrowser}打开当前页面</p>
+      <p class="subdesc">为避免支付、下载、跳转受限，建议优先使用{$recommendedBrowser}继续访问</p>
+      <div class="actions">
+        <button class="copy-btn" type="button" id="copyBtn" data-url="{$currentUrl}">复制本站链接</button>
+      </div>
+      <div class="url">当前页面：{$currentUrl}</div>
+    </section>
+  </main>
+  <div class="toast" id="toast">链接已复制</div>
+  <script>
+    (function () {
+      var btn = document.getElementById('copyBtn');
+      var toast = document.getElementById('toast');
+      function showToast(text) {
+        toast.textContent = text;
+        toast.className = 'toast show';
+        setTimeout(function () { toast.className = 'toast'; }, 1800);
+      }
+      btn.onclick = function () {
+        var currentUrl = btn.getAttribute('data-url') || window.location.href;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(currentUrl).then(function () {
+            showToast('链接已复制');
+          }).catch(function () {
+            showToast('请长按下方链接复制');
+          });
+          return;
+        }
+        showToast('请长按下方链接复制');
+      };
+    })();
+  </script>
+</body>
+</html>

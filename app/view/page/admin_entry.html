@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      /* ========== 全局加载动画 - 方块碎片化 ========== */
+      #global-loading {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: linear-gradient(180deg, #e3edff 0%, #eef4ff 50%, #f7fbff 100%);
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
+      #global-loading.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* 方块矩阵容器 */
+      .cube-loader {
+        width: 72px;
+        height: 72px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        gap: 6px;
+        transform-style: preserve-3d;
+        perspective: 600px;
+      }
+
+      /* 每个方块碎片 */
+      .cube-loader span {
+        background: linear-gradient(135deg, #1E90FF 0%, #0A66C2 100%);
+        border-radius: 4px;
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+        animation: cube-fragment 1.6s infinite ease-in-out;
+        box-shadow: 0 4px 12px rgba(30, 144, 255, 0.35);
+      }
+
+      /* 3x3 方阵的延迟序列，形成碎片化扩散效果 */
+      .cube-loader span:nth-child(1) { animation-delay: 0s; }
+      .cube-loader span:nth-child(2) { animation-delay: 0.1s; }
+      .cube-loader span:nth-child(3) { animation-delay: 0.2s; }
+      .cube-loader span:nth-child(4) { animation-delay: 0.1s; }
+      .cube-loader span:nth-child(5) { animation-delay: 0.2s; }
+      .cube-loader span:nth-child(6) { animation-delay: 0.3s; }
+      .cube-loader span:nth-child(7) { animation-delay: 0.2s; }
+      .cube-loader span:nth-child(8) { animation-delay: 0.3s; }
+      .cube-loader span:nth-child(9) { animation-delay: 0.4s; }
+
+      @keyframes cube-fragment {
+        0% {
+          opacity: 0;
+          transform: scale(0.2) translate(0, 0) rotate(-45deg);
+        }
+        25% {
+          opacity: 1;
+          transform: scale(1) translate(var(--tx, 0), var(--ty, 0)) rotate(0deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(0.9) translate(0, 0) rotate(15deg);
+        }
+        75% {
+          opacity: 0.8;
+          transform: scale(0.6) translate(0, 0) rotate(45deg);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.2) translate(0, 0) rotate(90deg);
+        }
+      }
+
+      .template-variable-drawer .arco-drawer-footer {
+        display: none !important;
+      }
+
+    </style>
+    <script>
+      (function () {
+        function cleanupTemplateVariableDrawerFooter() {
+          var drawers = document.querySelectorAll('.arco-drawer');
+          drawers.forEach(function (drawer) {
+            var title = drawer.querySelector('.arco-drawer-title');
+            if (!title || title.textContent.trim() !== '模板变量设置') return;
+            var footers = drawer.querySelectorAll(':scope > .arco-drawer-footer');
+            footers.forEach(function (footer) {
+              footer.remove();
+            });
+          });
+        }
+
+        cleanupTemplateVariableDrawerFooter();
+        new MutationObserver(cleanupTemplateVariableDrawerFooter).observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+        });
+      })();
+    </script>
+    <script type="module" crossorigin src="/pages/admin/assets/js/index-CgqIqlkl.js"></script>
+    <link rel="modulepreload" crossorigin href="/pages/admin/assets/js/rolldown-runtime-jxEyR9vv.js">
+    <link rel="modulepreload" crossorigin href="/pages/admin/assets/js/vendor-arco-BnQpO26x.js">
+    <link rel="modulepreload" crossorigin href="/pages/admin/assets/js/vendor-icons-DuzFXOlm.js">
+    <link rel="modulepreload" crossorigin href="/pages/admin/assets/js/vendor-core-Btnd3l2p.js">
+    <link rel="modulepreload" crossorigin href="/pages/admin/assets/js/vendor-crypto-I9l5orLb.js">
+    <link rel="stylesheet" crossorigin href="/pages/admin/assets/css/vendor-arco-It4oFdYg.css">
+    <link rel="stylesheet" crossorigin href="/pages/admin/assets/css/vendor-core-1oWo33m3.css">
+    <link rel="stylesheet" crossorigin href="/pages/admin/assets/css/index-BrfWI-2_.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- 全局加载动画，Vue 挂载后会被移除 -->
+      <div id="global-loading">
+        <div class="cube-loader">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

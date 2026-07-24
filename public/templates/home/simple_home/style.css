@@ -1,0 +1,112 @@
+.simple-home {
+  max-width: 980px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.simple-home-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px 16px;
+}
+
+.simple-home-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.simple-home-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 36px 24px;
+}
+
+.simple-home-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.simple-home-brand-name {
+  font-size: 16px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.simple-home-nav {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.simple-home-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  color: #111827;
+}
+
+.simple-home-desc {
+  margin: 0;
+  color: #4b5563;
+}
+
+.simple-home-keywords {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.simple-home-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.simple-home-item {
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  padding: 14px 12px;
+  background: #f8fafc;
+}
+
+.simple-home-item-title {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.simple-home-item-desc {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.simple-home-footer {
+  margin-top: 18px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+  .simple-home-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .simple-home-grid {
+    grid-template-columns: 1fr;
+  }
+}

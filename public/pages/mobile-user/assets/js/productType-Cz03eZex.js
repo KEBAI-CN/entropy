@@ -1,0 +1,1 @@
+const l={CARD:1,PHYSICAL:2,KNOWLEDGE:3},t=[{label:"卡密",value:l.CARD},{label:"实物",value:l.PHYSICAL},{label:"知识",value:l.KNOWLEDGE}],u=t.reduce((e,a)=>(e[a.value]=a.label,e),{}),o=e=>u[Number(e)]||"卡密";export{l as P,o as g,t as p};

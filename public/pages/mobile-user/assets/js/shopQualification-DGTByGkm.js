@@ -1,0 +1,1 @@
+import{q as t}from"./index-BCbYmjgM.js";function u(){return t.get({url:"/api/shop-qualification/status",skipUnauthorizedHandler:!0})}function o(i){return t.post({url:"/api/shop-qualification/submit",data:i})}export{o as a,u as f};

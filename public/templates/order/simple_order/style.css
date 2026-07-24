@@ -1,0 +1,201 @@
+.simple-order-page {
+  max-width: 920px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.simple-order-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+}
+
+.simple-order-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.simple-order-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.simple-order-intro {
+  margin-top: 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  padding: 12px 14px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.simple-order-search {
+  margin-top: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+}
+
+.simple-order-sample {
+  margin-top: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  padding: 16px;
+  color: #374151;
+  line-height: 1.9;
+}
+
+.simple-order-sample-title {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.simple-order-result-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.simple-order-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.simple-order-result-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.simple-order-result-trade {
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #111827;
+}
+
+.simple-order-result-main {
+  margin-top: 8px;
+  color: #1f2937;
+}
+
+.simple-order-result-meta {
+  margin-top: 4px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.simple-order-status {
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.order-status-paid {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.order-status-refunded {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.order-status-pending {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+}
+
+.simple-order-cards {
+  margin-top: 10px;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  background: #f0fdf4;
+  padding: 10px;
+}
+
+.simple-order-cards-title {
+  color: #166534;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.simple-order-card-item {
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+  background: #fff;
+  padding: 8px;
+  color: #111827;
+  font-size: 12px;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.simple-order-instruction {
+  margin-top: 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #eff6ff;
+  padding: 10px;
+}
+
+.simple-order-instruction-title {
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.simple-order-instruction-content {
+  margin-top: 6px;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.8;
+  word-break: break-all;
+}
+
+.simple-order-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.simple-order-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.simple-order-btn-view {
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.simple-order-btn-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}

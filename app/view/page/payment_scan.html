@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Language" content="zh-cn">
+<meta name="renderer" content="webkit">
+<title>扫码支付</title>
+<link rel="icon" type="image/x-icon" href="{$favicon|default=''}">
+<link rel="shortcut icon" type="image/x-icon" href="{$favicon|default=''}">
+<link href="/assets/payment/css/wechat_pay.css" rel="stylesheet" media="screen">
+<style>
+    /* Loading spinner */
+    .qr-loading { width: 230px; height: 230px; display: flex; align-items: center; justify-content: center; margin: 30px auto; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #1677ff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Payment method icon */
+    #headerIcon { display: inline-flex; vertical-align: middle; }
+    #tipScanIcon { display: inline-flex; vertical-align: middle; }
+    #headerIcon.is-empty, #tipScanIcon.is-empty { display: none !important; margin-right: 0 !important; }
+    .payment-method-icon { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; overflow: hidden; }
+    .payment-method-icon-img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .iconify-icon svg { width: 100% !important; height: 100% !important; display: block; }
+    /* Scan line animation */
+    .qr-image { position: relative; }
+    .scan-line { position: absolute; left: 50%; margin-left: -115px; width: 230px; height: 2px; background: linear-gradient(to right, transparent, #1677ff, transparent); box-shadow: 0 0 8px rgba(22,119,255,.6); animation: scanMove 2.5s ease-in-out infinite; top: 0; pointer-events: none; z-index: 5; }
+    @keyframes scanMove { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 230px; opacity: 0; } }
+    /* Status overlay */
+    .status-overlay { position: absolute; top: 0; left: 50%; margin-left: -115px; width: 230px; height: 230px; background: rgba(255,255,255,.96); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 20; }
+    .status-overlay.show { display: flex; }
+    .status-overlay .icon svg { width: 56px; height: 56px; }
+    .status-overlay .text { font-size: 18px; font-weight: 600; margin-top: 8px; }
+    /* Poll status */
+    .poll-status { font-size: 12px; color: #999; margin-top: 10px; }
+    /* Error state */
+    .error-state { text-align: center; padding: 60px 20px; }
+    .error-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .error-state h2 { font-size: 18px; margin: 0 0 8px; color: #333; }
+    .error-state p { color: #999; font-size: 14px; margin: 0 0 16px; }
+    .error-state .btn { display: inline-block; padding: 10px 24px; border: 0; border-radius: 12px; background: #1677ff; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .error-state .btn:hover { background: #4096ff; }
+</style>
+</head>
+<body>
+<div class="body" id="page" data-order-no="{$orderNo|htmlentities}">
+    <h1 class="mod-title">
+        <span id="headerIcon"></span><span class="text" id="headerText">扫码支付</span>
+    </h1>
+
+    <div class="mod-ct">
+        <!-- Loading -->
+        <div id="loadingState">
+            <div class="qr-loading"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Error -->
+        <div id="errorState" class="error-state" style="display:none;">
+            <div class="icon">⚠️</div>
+            <h2 id="errorTitle">获取支付信息失败</h2>
+            <p id="errorMsg">请稍后重试</p>
+            <a class="btn" href="javascript:void(0)" onclick="window.location.reload()">刷新重试</a>
+        </div>
+
+        <!-- Payment -->
+        <div id="payState" style="display:none;">
+            <div class="amount">￥<span id="displayAmount">0.00</span></div>
+
+            <div class="qr-image" id="qrImageWrap">
+                <div id="qrcode"></div>
+                <div class="scan-line" id="scanLine"></div>
+                <div class="status-overlay" id="statusOverlay">
+                    <div class="icon" id="statusIcon"></div>
+                    <div class="text" id="statusText"></div>
+                </div>
+            </div>
+
+            <div class="poll-status" id="pollStatus">正在检测支付结果...</div>
+
+            <div class="detail" id="orderDetail">
+                <dl class="detail-ct" id="detailCt" style="display:none;">
+                    <dt>购买物品</dt>
+                    <dd id="productName"></dd>
+                    <dt>商户订单号</dt>
+                    <dd id="billId"></dd>
+                </dl>
+                <a href="javascript:void(0)" class="arrow" id="detailArrow">
+                    <i class="ico-arrow"></i>
+                </a>
+            </div>
+
+            <div class="tip">
+                <span class="dec dec-left"></span>
+                <span class="dec dec-right"></span>
+                <div id="tipScanIcon"></div>
+                <div class="tip-text">
+                    <p>请使用<span id="tipMethod">支付宝/微信</span>扫一扫</p>
+                    <p>扫描二维码完成支付</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="foot">
+        <div class="inner">
+            <p>手机用户可保存上方二维码到手机中</p>
+            <p>在<span id="footMethod">支付宝/微信</span>扫一扫中选择"相册"即可</p>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/payment/js/jquery.min.js"></script>
+<script src="/assets/payment/js/jquery.qrcode.min.js"></script>
+<script>
+    (function () {
+        var page = document.getElementById('page');
+        var orderNo = page ? page.getAttribute('data-order-no') : '';
+        var timer = null;
+        var pollCount = 0;
+
+        // Color map for real SVG provider icons
+        var providerColors = {
+            alipay: '#1677FF',
+            wechat: '#09BB07',
+            qqpay: '#12B7F5',
+            usdt: '#26A17B',
+            default: '#6366f1'
+        };
+
+        function getProviderType(provider, method) {
+            var p = String(provider || '').toLowerCase();
+            var m = String(method || '').toLowerCase();
+            if (p.indexOf('alipay') >= 0 || m.indexOf('alipay') >= 0 || m.indexOf('支付宝') >= 0) return 'alipay';
+            if (p.indexOf('wx') >= 0 || p.indexOf('wechat') >= 0 || m.indexOf('wx') >= 0 || m.indexOf('微信') >= 0 || m.indexOf('weixin') >= 0) return 'wechat';
+            if (p.indexOf('qq') >= 0 || m.indexOf('qq') >= 0) return 'qqpay';
+            if (p.indexOf('usdt') >= 0 || m.indexOf('usdt') >= 0) return 'usdt';
+            return 'default';
+        }
+
+        function getProviderLabel(type, fallback) {
+            if (type === 'alipay') return '支付宝';
+            if (type === 'wechat') return '微信';
+            if (type === 'qqpay') return 'QQ钱包';
+            if (type === 'usdt') return 'USDT';
+            return fallback || '在线支付';
+        }
+
+        function escapeAttr(value) {
+            return String(value || '').replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] || ch;
+            });
+        }
+
+        function setIconHostVisible(host, visible) {
+            if (!host) return;
+            host.classList.toggle('is-empty', !visible);
+            if (host.id === 'headerIcon') {
+                host.style.marginRight = visible ? '7px' : '0';
+            }
+            if (host.id === 'tipScanIcon') {
+                var tipText = document.querySelector('.tip .tip-text');
+                if (tipText) {
+                    tipText.style.marginLeft = visible ? '23px' : '0';
+                }
+            }
+        }
+
+        function syncIconHosts() {
+            ['headerIcon', 'tipScanIcon'].forEach(function (id) {
+                var host = document.getElementById(id);
+                if (!host) return;
+                setIconHostVisible(host, !!host.querySelector('img, svg, .iconify-icon'));
+            });
+        }
+
+        function bindPaymentIconImages() {
+            document.querySelectorAll('img[data-payment-icon-img]').forEach(function (img) {
+                img.onerror = function () {
+                    if (img.parentNode) {
+                        img.parentNode.remove();
+                    }
+                    syncIconHosts();
+                };
+            });
+        }
+
+        // Build a real payment icon. No text/background fallback: if no icon is available, render nothing.
+        function buildIcon(data, size) {
+            size = size || 36;
+            var type = getProviderType(data.provider, data.payment_method);
+            var color = data.color || providerColors[type] || providerColors.default;
+
+            if (data.icon_url) {
+                return '<span class="payment-method-icon" style="width:' + size + 'px;height:' + size + 'px;">' +
+                    '<img class="payment-method-icon-img" src="' + escapeAttr(data.icon_url) + '" alt="" data-payment-icon-img="1">' +
+                    '</span>';
+            }
+
+            if (data.icon && data.icon.indexOf(':') > 0) {
+                return '<span class="payment-method-icon iconify-icon" data-icon="' + escapeAttr(data.icon) + '" data-color="' + escapeAttr(color) + '" ' +
+                    'style="width:' + size + 'px;height:' + size + 'px;' +
+                    'color:' + color + ';"></span>';
+            }
+
+            return '';
+        }
+
+        // Fetch and inject Iconify SVG icons
+        function loadIconifyIcons() {
+            var placeholders = document.querySelectorAll('.iconify-icon[data-icon]');
+            if (placeholders.length === 0) return;
+
+            // Group by icon name to avoid duplicate requests
+            var iconMap = {};
+            placeholders.forEach(function (el) {
+                var name = el.getAttribute('data-icon');
+                if (!iconMap[name]) iconMap[name] = [];
+                iconMap[name].push(el);
+            });
+
+            Object.keys(iconMap).forEach(function (name) {
+                var apiName = String(name || '').replace(':', '/');
+                fetch('https://api.iconify.design/' + apiName + '.svg')
+                    .then(function (r) { return r.text(); })
+                    .then(function (svgText) {
+                        if (svgText.indexOf('<svg') < 0) {
+                            iconMap[name].forEach(function (el) { el.remove(); });
+                            return;
+                        }
+                        iconMap[name].forEach(function (el) {
+                            var color = el.getAttribute('data-color') || '';
+                            var svg = svgText;
+                            if (color) {
+                                svg = svg.replace('<svg', '<svg style="color:' + color + ';fill:currentColor"');
+                            }
+                            el.innerHTML = svg;
+                        });
+                        syncIconHosts();
+                    })
+                    .catch(function () {
+                        iconMap[name].forEach(function (el) {
+                            el.remove();
+                        });
+                        syncIconHosts();
+                    });
+            });
+        }
+
+        function showState(id) {
+            document.getElementById('loadingState').style.display = id === 'loadingState' ? '' : 'none';
+            document.getElementById('errorState').style.display = id === 'errorState' ? '' : 'none';
+            document.getElementById('payState').style.display = id === 'payState' ? '' : 'none';
+        }
+
+        function showError(msg, title) {
+            document.getElementById('errorMsg').textContent = msg || '请稍后重试';
+            document.getElementById('errorTitle').textContent = title || '获取支付信息失败';
+            showState('errorState');
+        }
+
+        function fetchQrcode() {
+            if (!orderNo) { showError('缺少订单号'); return; }
+
+            fetch('/api/payment/qrcode?order_no=' + encodeURIComponent(orderNo), { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.code !== 200 || !res.data) {
+                        showError(res.msg || '获取支付二维码失败');
+                        return;
+                    }
+                    var data = res.data;
+                    if (!data.url) {
+                        showError('支付链接尚未生成，请稍后刷新重试');
+                        return;
+                    }
+                    renderPage(data);
+                })
+                .catch(function () { showError('网络错误，请刷新重试'); });
+        }
+
+        function renderPage(data) {
+            var type = getProviderType(data.provider, data.payment_method);
+            var label = getProviderLabel(type, data.provider_name || data.payment_method);
+
+            // Header icon (size 36)
+            var headerIconHtml = buildIcon(data, 36);
+            var headerIcon = document.getElementById('headerIcon');
+            headerIcon.innerHTML = headerIconHtml;
+            setIconHostVisible(headerIcon, !!headerIconHtml);
+
+            // Header text
+            document.getElementById('headerText').textContent = label + '扫码支付';
+
+            // Tip method
+            document.getElementById('tipMethod').textContent = label;
+            document.getElementById('footMethod').textContent = label;
+
+            // Tip scan icon (size 50)
+            var tipIconHtml = buildIcon(data, 50);
+            var tipScanIcon = document.getElementById('tipScanIcon');
+            tipScanIcon.innerHTML = tipIconHtml;
+            setIconHostVisible(tipScanIcon, !!tipIconHtml);
+            bindPaymentIconImages();
+
+            // Amount
+            document.getElementById('displayAmount').textContent = data.amount || '0.00';
+
+            // Product name in detail
+            document.getElementById('productName').textContent = data.product_name || '商品订单';
+            document.getElementById('billId').textContent = orderNo;
+
+            // QR code
+            $('#qrcode').empty().qrcode({
+                text: data.url,
+                width: 230,
+                height: 230,
+                foreground: '#000000',
+                background: '#ffffff',
+                typeNumber: -1
+            });
+
+            showState('payState');
+            // Load Iconify icons after DOM update
+            setTimeout(loadIconifyIcons, 50);
+
+            // Mobile: try to launch payment APP directly
+            tryLaunchApp(data, type);
+
+            startPolling();
+        }
+
+        function isMobile() {
+            var ua = navigator.userAgent || '';
+            var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
+            var isIphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/);
+            var isAndroid = ua.match(/(Android)\s+([\d.]+)/);
+            return !!(isIphone || isAndroid || ipad);
+        }
+
+        function tryLaunchApp(data, type) {
+            if (!isMobile()) return;
+
+            var payUrl = data.url || '';
+            if (!payUrl) return;
+
+            var scheme = '';
+
+            if (type === 'alipay') {
+                // Alipay: wrap qr URL into alipays:// scheme
+                if (payUrl.indexOf('alipays://') === 0) {
+                    scheme = payUrl;
+                } else {
+                    scheme = 'alipays://platformapi/startapp?appId=20000067&url=' + encodeURIComponent(payUrl);
+                }
+            } else if (type === 'wechat') {
+                // Wechat: the qr content is already a weixin:// scheme,
+                // or an https URL that can be opened directly
+                if (payUrl.indexOf('weixin://') === 0) {
+                    scheme = payUrl;
+                } else {
+                    scheme = payUrl;
+                }
+            } else {
+                // Other providers: try opening URL directly
+                scheme = payUrl;
+            }
+
+            if (!scheme) return;
+
+            // Show "launching" hint
+            var pollStatus = document.getElementById('pollStatus');
+            if (pollStatus) {
+                pollStatus.textContent = '正在尝试拉起' + getProviderLabel(type, '') + '，如未打开请扫描上方二维码';
+            }
+
+            // Record visibility to detect if app was launched
+            var hiddenTime = null;
+
+            // Try to launch
+            setTimeout(function () {
+                window.location.href = scheme;
+            }, 300);
+
+            // Listen for visibility change - if page becomes hidden, app likely opened
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    hiddenTime = Date.now();
+                    if (pollStatus) {
+                        pollStatus.textContent = '正在检测支付结果...';
+                    }
+                }
+            });
+        }
+
+        function startPolling() {
+            stopPolling();
+            timer = setInterval(checkStatus, 2000);
+        }
+
+        function stopPolling() {
+            if (timer) { clearInterval(timer); timer = null; }
+        }
+
+        function isWalletRecharge(data) {
+            var type = String((data && data.type) || '').toLowerCase();
+            return type === 'deposit' || orderNo.indexOf('DEP') === 0 || orderNo.indexOf('OP') === 0;
+        }
+
+        function isDockingRecharge(data) {
+            var type = String((data && data.type) || '').toLowerCase();
+            return type === 'recharge' || type === 'docking' || orderNo.indexOf('DR') === 0;
+        }
+
+        function getPaidRedirectUrl(data) {
+            if (data && data.redirect_url) return String(data.redirect_url);
+            if (isWalletRecharge(data)) {
+                return '/user/wallet/balance?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+            }
+            if (isDockingRecharge(data)) {
+                return '/distribution/center?recharge=success&order_no=' + encodeURIComponent(orderNo || '');
+            }
+            var accessToken = (data && data.detail_access_token) ? String(data.detail_access_token) : '';
+            var detailUrl = '/order/detail/' + encodeURIComponent(orderNo);
+            if (accessToken) {
+                detailUrl += '?access_token=' + encodeURIComponent(accessToken);
+            }
+            return detailUrl;
+        }
+
+        function checkStatus() {
+            if (!orderNo) return;
+            pollCount++;
+            if (pollCount > 150) {
+                showStatus('expired');
+                stopPolling();
+                return;
+            }
+            document.getElementById('pollStatus').textContent = '正在检测支付结果... (' + pollCount + ')';
+            fetch('/api/payment/check?order_no=' + encodeURIComponent(orderNo), { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    var d = res && res.data ? res.data : {};
+                    var s = String(d.status || '').toLowerCase();
+                    if (s === 'paid' || s === 'pending_shipment') {
+                        showStatus('success');
+                        stopPolling();
+                        setTimeout(function () {
+                            window.location.href = getPaidRedirectUrl(d);
+                        }, 1500);
+                    }
+                })
+                .catch(function () {});
+        }
+
+        function showStatus(type) {
+            var overlay = document.getElementById('statusOverlay');
+            var icon = document.getElementById('statusIcon');
+            var text = document.getElementById('statusText');
+            var scanLine = document.getElementById('scanLine');
+            overlay.classList.add('show');
+            if (type === 'success') {
+                icon.innerHTML = '<svg viewBox="0 0 1024 1024"><path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm-96 724L212 500l80-80 124 124 276-276 80 80-356 276z" fill="#22c55e"/></svg>';
+                text.textContent = '支付成功';
+                text.style.color = '#22c55e';
+                scanLine.style.display = 'none';
+                document.getElementById('pollStatus').textContent = '支付成功，即将跳转...';
+            } else if (type === 'expired') {
+                icon.innerHTML = '<svg viewBox="0 0 1024 1024"><path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0zm192 648L648 704l-136-136-136 136-56-56 136-136-136-136 56-56 136 136 136-136 56 56-136 136 136 136z" fill="#ef4444"/></svg>';
+                text.textContent = '二维码已过期';
+                text.style.color = '#ef4444';
+                scanLine.style.display = 'none';
+                document.getElementById('pollStatus').textContent = '请刷新页面重新获取二维码';
+            }
+        }
+
+        // Detail toggle (jQuery slide, same as example)
+        $('#detailArrow').click(function () {
+            var $detail = $('#orderDetail');
+            if ($detail.hasClass('detail-open')) {
+                $('#detailCt').slideUp(500, function () {
+                    $detail.removeClass('detail-open');
+                });
+            } else {
+                $('#detailCt').slideDown(500, function () {
+                    $detail.addClass('detail-open');
+                });
+            }
+        });
+
+        // Start
+        showState('loadingState');
+        fetchQrcode();
+    })();
+</script>
+</body>
+</html>

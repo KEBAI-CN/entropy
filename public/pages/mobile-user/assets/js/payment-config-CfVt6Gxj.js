@@ -1,0 +1,1 @@
+import{q as e}from"./index-BwFvsO0U.js";function n(t){return e.get({url:"/api/payment/config/available",params:t,returnRawResponse:!0})}function r(){return e.get({url:"/api/payment/config/types"})}export{n as a,r as f};

@@ -1,0 +1,64 @@
+{
+  "_rolldown-runtime-NMqb_1LM.js": {
+    "file": "assets/js/rolldown-runtime-NMqb_1LM.js",
+    "name": "rolldown-runtime"
+  },
+  "_vendor-arco-It4oFdYg.css": {
+    "file": "assets/css/vendor-arco-It4oFdYg.css",
+    "src": "_vendor-arco-It4oFdYg.css"
+  },
+  "_vendor-arco-VUgowWvF.js": {
+    "file": "assets/js/vendor-arco-VUgowWvF.js",
+    "name": "vendor-arco",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js"
+    ],
+    "css": [
+      "assets/css/vendor-arco-It4oFdYg.css"
+    ]
+  },
+  "_vendor-core-Bo72caln.js": {
+    "file": "assets/js/vendor-core-Bo72caln.js",
+    "name": "vendor-core",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-VUgowWvF.js"
+    ]
+  },
+  "index.html": {
+    "file": "assets/js/index-u-B17kAx.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-VUgowWvF.js",
+      "_vendor-core-Bo72caln.js"
+    ],
+    "dynamicImports": [
+      "src/views/Home.vue"
+    ],
+    "css": [
+      "assets/css/index-BUmHLbyg.css"
+    ]
+  },
+  "src/views/Home.vue": {
+    "file": "assets/js/Home-CZxBz2GL.js",
+    "name": "Home",
+    "src": "src/views/Home.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-VUgowWvF.js",
+      "_vendor-core-Bo72caln.js"
+    ],
+    "dynamicImports": [
+      "_vendor-core-Bo72caln.js",
+      "index.html"
+    ],
+    "css": [
+      "assets/css/Home-DEkhrux6.css"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "_rolldown-runtime-NMqb_1LM.js": {
+    "file": "assets/js/rolldown-runtime-NMqb_1LM.js",
+    "name": "rolldown-runtime"
+  },
+  "_vendor-arco-BwiH_tss.css": {
+    "file": "assets/css/vendor-arco-BwiH_tss.css",
+    "src": "_vendor-arco-BwiH_tss.css"
+  },
+  "_vendor-arco-gwqAWtKw.js": {
+    "file": "assets/js/vendor-arco-gwqAWtKw.js",
+    "name": "vendor-arco",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js"
+    ],
+    "css": [
+      "assets/css/vendor-arco-BwiH_tss.css"
+    ]
+  },
+  "_vendor-core-l8wIReId.js": {
+    "file": "assets/js/vendor-core-l8wIReId.js",
+    "name": "vendor-core",
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js"
+    ]
+  },
+  "index.html": {
+    "file": "assets/js/index-Y7bu7-oi.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-NMqb_1LM.js",
+      "_vendor-arco-gwqAWtKw.js",
+      "_vendor-core-l8wIReId.js"
+    ],
+    "css": [
+      "assets/css/index-BvxQZxo7.css"
+    ],
+    "assets": [
+      "assets/images/logo-FtGdwVRj.webp"
+    ]
+  },
+  "src/assets/images/common/logo.webp": {
+    "file": "assets/images/logo-FtGdwVRj.webp",
+    "src": "src/assets/images/common/logo.webp"
+  }
+}

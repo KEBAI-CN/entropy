@@ -1,0 +1,254 @@
+<?php
+$__normalizeNavUrl = static function ($path) {
+    $path = trim((string)$path);
+    if ($path === '') {
+        return '';
+    }
+    if (preg_match('/^https?:\/\//i', $path) || strpos($path, '//') === 0) {
+        return $path;
+    }
+    return $path[0] === '/' ? $path : '/' . $path;
+};
+
+$__currentPath = '/' . trim((string)request()->pathinfo(), '/');
+if ($__currentPath === '//') {
+    $__currentPath = '/';
+}
+
+$__shopLinkPrefix = trim((string)setting('shop_link_prefix'), '/') ?: 's';
+$__pathSegments = array_values(array_filter(explode('/', trim($__currentPath, '/')), static function ($segment) {
+    return $segment !== '';
+}));
+$__currentShopSlug = '';
+if (($__pathSegments[0] ?? '') === $__shopLinkPrefix && !empty($__pathSegments[1]) && preg_match('/^[a-zA-Z0-9_-]+$/', $__pathSegments[1])) {
+    $__currentShopSlug = $__pathSegments[1];
+}
+$__distributionLoginUrl = '/distribution/login';
+$__distributionCenterUrl = '/distribution/center';
+if ($__currentShopSlug !== '') {
+    $__distributionLoginUrl .= '?shop_slug=' . rawurlencode($__currentShopSlug);
+    $__distributionCenterUrl .= '?shop_slug=' . rawurlencode($__currentShopSlug);
+}
+
+$__isNavActive = static function ($path) use ($__currentPath) {
+    $path = trim((string)$path);
+    if ($path === '') {
+        return false;
+    }
+    $normalized = rtrim($path, '/') ?: '/';
+    $current = rtrim($__currentPath, '/') ?: '/';
+    return $current === $normalized || strpos($current, $normalized . '/') === 0;
+};
+
+$__navItems = json_decode((string)setting('site_navigation_config'), true);
+if (!is_array($__navItems) || empty($__navItems)) {
+    $__navItems = [
+        ['label' => '网站首页', 'path' => '/', 'visible' => true, 'children' => []],
+    ];
+    if (setting('home_show_faq') === '1') {
+        $__navItems[] = ['label' => '平台文章', 'path' => '/articles', 'visible' => true, 'children' => []];
+    }
+}
+
+$__navItems = array_values(array_filter(array_map(function ($item) use ($__normalizeNavUrl) {
+    if (!is_array($item) || (($item['visible'] ?? true) === false) || (($item['hidden'] ?? false) === true)) {
+        return null;
+    }
+    $children = [];
+    foreach ((array)($item['children'] ?? []) as $child) {
+        if (!is_array($child) || (($child['visible'] ?? true) === false) || (($child['hidden'] ?? false) === true)) {
+            continue;
+        }
+        $children[] = [
+            'label' => (string)($child['label'] ?? $child['title'] ?? ''),
+            'path' => $__normalizeNavUrl($child['path'] ?? $child['url'] ?? ''),
+        ];
+    }
+    return [
+        'label' => (string)($item['label'] ?? $item['title'] ?? ''),
+        'path' => $__normalizeNavUrl($item['path'] ?? $item['url'] ?? ''),
+        'children' => array_values(array_filter($children, function ($child) {
+            return $child['label'] !== '' || $child['path'] !== '';
+        })),
+    ];
+}, $__navItems), function ($item) {
+    return is_array($item) && ($item['label'] !== '' || $item['path'] !== '' || !empty($item['children']));
+}));
+
+$__siteLogo = trim((string)setting('site_logo'));
+$__navLogo = $__siteLogo !== '' ? $__siteLogo : '/assets/images/logo.webp';
+?>
+<nav class="pub-nav" id="pub-nav">
+  <div class="pub-nav-shell">
+    <div class="pub-nav-inner">
+      <div class="pub-nav-start">
+        <a href="/" class="pub-nav-brand">
+          <?php if ($__navLogo !== ''): ?>
+            <img src="<?=htmlspecialchars($__navLogo, ENT_QUOTES, 'UTF-8')?>" alt="{:setting('site_name')}" class="pub-nav-logo" onerror="this.style.display='none'">
+          <?php endif; ?>
+          <span class="pub-nav-title">{:setting('site_name')}</span>
+        </a>
+        <div class="pub-nav-links" id="pub-nav-links">
+          <?php foreach ($__navItems as $__navItem): ?>
+            <?php $__hasChildren = !empty($__navItem['children']); ?>
+            <?php $__isGroupOnly = $__hasChildren && $__navItem['path'] === ''; ?>
+            <?php $__titleClass = 'pub-nav-link' . ($__isNavActive($__navItem['path']) ? ' active' : '') . ($__isGroupOnly ? ' pub-nav-link--group' : ''); ?>
+            <?php if ($__hasChildren): ?>
+              <div class="pub-nav-group">
+                <?php if ($__navItem['path'] !== ''): ?>
+                  <a href="<?=htmlspecialchars($__navItem['path'], ENT_QUOTES, 'UTF-8')?>" class="<?=htmlspecialchars($__titleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></a>
+                <?php else: ?>
+                  <span class="<?=htmlspecialchars($__titleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></span>
+                <?php endif; ?>
+                <div class="pub-nav-submenu">
+                  <?php foreach ($__navItem['children'] as $__navChild): ?>
+                    <?php $__childClass = 'pub-nav-submenu-link' . ($__isNavActive($__navChild['path']) ? ' active' : ''); ?>
+                    <?php if ($__navChild['path'] !== ''): ?>
+                      <a href="<?=htmlspecialchars($__navChild['path'], ENT_QUOTES, 'UTF-8')?>" class="<?=htmlspecialchars($__childClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navChild['label'], ENT_QUOTES, 'UTF-8')?></a>
+                    <?php else: ?>
+                      <span class="<?=htmlspecialchars($__childClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navChild['label'], ENT_QUOTES, 'UTF-8')?></span>
+                    <?php endif; ?>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php else: ?>
+              <?php if ($__navItem['path'] !== ''): ?>
+                <a href="<?=htmlspecialchars($__navItem['path'], ENT_QUOTES, 'UTF-8')?>" class="<?=htmlspecialchars($__titleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></a>
+              <?php else: ?>
+                <span class="<?=htmlspecialchars($__titleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></span>
+              <?php endif; ?>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="pub-nav-actions">
+        {if condition="setting('docking_auth_enabled') === '1'"}
+        <a href="<?=htmlspecialchars($__distributionLoginUrl, ENT_QUOTES, 'UTF-8')?>" class="pub-nav-login-link" id="pub-nav-login-link">登录</a>
+        {else /}
+        <a href="/order/search" class="pub-nav-login-link" id="pub-nav-login-link">查询订单</a>
+        {/if}
+      </div>
+      <div class="pub-nav-mobile-toggle" id="pub-nav-toggle" onclick="document.getElementById('pub-nav').classList.toggle('mobile-open')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </div>
+    </div>
+    <div class="pub-nav-mobile-menu" id="pub-nav-mobile-links">
+      <?php foreach ($__navItems as $__navItem): ?>
+        <?php $__hasChildren = !empty($__navItem['children']); ?>
+        <?php $__mobileTitleClass = 'pub-nav-mobile-link' . ($__hasChildren && $__navItem['path'] === '' ? ' pub-nav-mobile-link--group' : ''); ?>
+        <?php if ($__navItem['path'] !== ''): ?>
+          <a href="<?=htmlspecialchars($__navItem['path'], ENT_QUOTES, 'UTF-8')?>" class="<?=htmlspecialchars($__mobileTitleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></a>
+        <?php else: ?>
+          <div class="<?=htmlspecialchars($__mobileTitleClass, ENT_QUOTES, 'UTF-8')?>"><?=htmlspecialchars($__navItem['label'], ENT_QUOTES, 'UTF-8')?></div>
+        <?php endif; ?>
+        <?php if ($__hasChildren): ?>
+          <div class="pub-nav-mobile-children">
+            <?php foreach ($__navItem['children'] as $__navChild): ?>
+              <?php if ($__navChild['path'] !== ''): ?>
+                <a href="<?=htmlspecialchars($__navChild['path'], ENT_QUOTES, 'UTF-8')?>" class="pub-nav-mobile-link"><?=htmlspecialchars($__navChild['label'], ENT_QUOTES, 'UTF-8')?></a>
+              <?php else: ?>
+                <div class="pub-nav-mobile-link"><?=htmlspecialchars($__navChild['label'], ENT_QUOTES, 'UTF-8')?></div>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      <?php endforeach; ?>
+      {if condition="setting('docking_auth_enabled') === '1'"}
+      <a href="<?=htmlspecialchars($__distributionLoginUrl, ENT_QUOTES, 'UTF-8')?>" class="pub-nav-mobile-link pub-nav-mobile-cta" id="pub-nav-mobile-login-link">登录</a>
+      {else /}
+      <a href="/order/search" class="pub-nav-mobile-link pub-nav-mobile-cta" id="pub-nav-mobile-login-link">查询订单</a>
+      {/if}
+    </div>
+  </div>
+</nav>
+
+<style>
+.pub-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.68);border-bottom:1px solid rgba(229,230,235,.78);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.pub-nav-shell{max-width:1200px;margin:0 auto}
+.pub-nav-inner{height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.pub-nav-start{display:flex;align-items:center;gap:28px;flex:1;min-width:0}
+.pub-nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#1d2129;flex-shrink:0}
+.pub-nav-logo{height:32px;width:auto;max-width:160px;object-fit:contain}
+.pub-nav-title{font-size:16px;font-weight:600;white-space:nowrap}
+.pub-nav-links{display:flex;align-items:center;gap:24px;justify-content:flex-start}
+.pub-nav-link{font-size:14px;color:#4e5969;text-decoration:none;transition:color .2s;white-space:nowrap;padding:8px 0;cursor:pointer}
+.pub-nav-link--group{cursor:default;color:#1d2129}
+.pub-nav-link:hover,.pub-nav-link.active{color:#165dff}
+.pub-nav-group{position:relative;display:flex;align-items:center;padding-bottom:10px;margin-bottom:-10px}
+.pub-nav-group:hover .pub-nav-submenu{display:flex}
+.pub-nav-link--group::after{content:'▾';display:inline-block;margin-left:6px;font-size:12px;color:#86909c}
+.pub-nav-submenu{display:none;position:absolute;top:calc(100% + 8px);left:0;min-width:190px;flex-direction:column;padding:8px;background:rgba(255,255,255,.98);border:1px solid rgba(229,230,235,.9);border-radius:14px;box-shadow:0 12px 36px rgba(15,23,42,.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.pub-nav-submenu::before{content:'';position:absolute;top:-6px;left:18px;width:12px;height:12px;background:rgba(255,255,255,.98);border-left:1px solid rgba(229,230,235,.9);border-top:1px solid rgba(229,230,235,.9);transform:rotate(45deg)}
+.pub-nav-submenu-link{position:relative;padding:11px 14px;border-radius:10px;font-size:14px;color:#4e5969;text-decoration:none;white-space:nowrap}
+.pub-nav-submenu-link:hover,.pub-nav-submenu-link.active{color:#165dff;background:rgba(22,93,255,.06)}
+.pub-nav-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.pub-nav-login-link{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 18px;border-radius:22px;background:rgb(22, 93, 255);color:#fff;font-size:14px;font-weight:500;line-height:36px;text-decoration:none;transition:background .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(22,93,255,.18)}
+.pub-nav-login-link:hover{background:rgb(64, 128, 255);color:#fff}
+.pub-nav-mobile-toggle{display:none;cursor:pointer;padding:4px;color:#4e5969}
+.pub-nav-mobile-menu{display:none;flex-direction:column;padding:8px 20px 16px;border-top:1px solid rgba(229,230,235,.72);background:rgba(255,255,255,.76)}
+.pub-nav.mobile-open .pub-nav-mobile-menu{display:flex}
+.pub-nav-mobile-link{display:block;padding:10px 0;font-size:14px;color:#4e5969;text-decoration:none;border-bottom:1px solid rgba(229,230,235,.72)}
+.pub-nav-mobile-link--group{color:#1d2129;font-weight:600;cursor:default}
+.pub-nav-mobile-children{padding-left:12px}
+.pub-nav-mobile-link:last-child{border-bottom:none}
+.pub-nav-mobile-link:hover{color:#165dff}
+.pub-nav-mobile-cta{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:0 18px;height:36px;border-radius:22px;background:rgb(22, 93, 255);color:#fff;border-bottom:none}
+.pub-nav-mobile-cta:hover{background:rgb(64, 128, 255);color:#fff}
+@media(max-width:768px){
+  .pub-nav-links,.pub-nav-actions{display:none}
+  .pub-nav-mobile-toggle{display:block}
+  .pub-nav-inner{height:56px;padding:0 16px}
+  .pub-nav-start{gap:12px}
+  .pub-nav-title{font-size:14px;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+}
+</style>
+
+<script>
+(function () {
+  var desktopLink = document.getElementById('pub-nav-login-link');
+  var mobileLink = document.getElementById('pub-nav-mobile-login-link');
+  var dockingEnabled = <?php echo (setting('docking_auth_enabled') === '1' ? 'true' : 'false'); ?>;
+  var distributionLoginUrl = <?php echo json_encode($__distributionLoginUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+  var distributionCenterUrl = <?php echo json_encode($__distributionCenterUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+
+  function applyState(loggedIn) {
+    var href = '/order/search';
+    var text = '查询订单';
+    if (dockingEnabled) {
+      href = loggedIn ? distributionCenterUrl : distributionLoginUrl;
+      text = loggedIn ? '仪表盘' : '登录';
+    }
+    [desktopLink, mobileLink].forEach(function (node) {
+      if (!node) return;
+      node.setAttribute('href', href);
+      node.textContent = text;
+    });
+  }
+
+  function syncFromStorage() {
+    try {
+      var token = String(localStorage.getItem('docking_token') || '').trim();
+      applyState(!!token);
+    } catch (e) {
+      applyState(false);
+    }
+  }
+
+  window.addEventListener('storage', function (event) {
+    if (!event || event.key === 'docking_token' || event.key === 'docking_user' || event.key === null) {
+      syncFromStorage();
+    }
+  });
+
+  window.addEventListener('docking-auth-changed', function (event) {
+    var loggedIn = !!(event && event.detail && event.detail.loggedIn);
+    applyState(loggedIn);
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncFromStorage, { once: true });
+  } else {
+    syncFromStorage();
+  }
+})();
+</script>

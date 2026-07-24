@@ -1,0 +1,50 @@
+<div class="shop-example shop-page shop-template-root">
+  <section class="shop-example-hero shop-header shop-surface shop-header-container">
+    <div class="shop-header-main">
+      <div class="shop-example-profile shop-header-left">
+        <div class="shop-example-avatar shop-avatar shop-avatar-frame-host">
+          <img class="shop-example-avatar-img" src="{{shopAvatar}}" alt="shop-avatar" data-variable="shopAvatar" />
+        </div>
+      </div>
+      <div class="shop-header-center">
+        <div class="shop-example-meta shop-header-info">
+          <div class="shop-name-section">
+            <h1 class="shop-example-name shop-name">{{shopName}}</h1>
+            <div class="shop-badges" data-variable="shopBadgesHtml">{{shopBadgesHtml}}</div>
+          </div>
+          <p class="shop-example-status shop-status">{{shopStatusText}}</p>
+          <div class="shop-example-trust" data-variable="shopTrustInfoHtml">{{shopTrustInfoHtml}}</div>
+          <div class="shop-name-extra"></div>
+        </div>
+      </div>
+    </div>
+    <div class="shop-header-right">
+      <div class="shop-example-actions shop-actions">
+        <button class="shop-btn shop-btn-primary" data-action="share">分享店铺</button>
+        <button class="shop-btn shop-btn-default" data-action="copy-wechat">复制微信</button>
+        <button class="shop-btn shop-btn-default" data-action="call-phone">联系商家</button>
+        <button class="shop-btn shop-btn-danger" data-action="report">投诉举报</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="shop-example-notice shop-notice shop-surface">
+    <div class="shop-notice-before"></div>
+    <div class="shop-notice-content" data-variable="shopNotice">{{shopNotice}}</div>
+  </section>
+
+  <section class="shop-example-toolbar shop-stats-bar shop-surface">
+    <div class="shop-example-search shop-search">
+      <input class="shop-search-input" data-action="search-input" data-variable="shopSearchValue" type="text" placeholder="搜索商品" value="{{shopSearchValue}}" />
+      <button class="shop-btn shop-btn-primary" data-action="search">搜索</button>
+      <div class="shop-example-count shop-stats-item" data-variable="shopProductCountText">{{shopProductCountText}}</div>
+    </div>
+  </section>
+
+  <section class="shop-example-categories shop-categories shop-category-list" data-variable="shopCategoriesHtml">{{shopCategoriesHtml}}</section>
+  <section class="shop-example-products shop-content shop-product-list" data-variable="shopProductsHtml">{{shopProductsHtml}}</section>
+
+  <section class="shop-example-load-more">
+    <button class="shop-btn shop-btn-default" data-action="load-more" data-variable="shopLoadMoreText">{{shopLoadMoreText}}</button>
+  </section>
+</div>

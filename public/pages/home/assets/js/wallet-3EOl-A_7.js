@@ -1,0 +1,1 @@
+import{j as r}from"./index-CxIrzdKo.js";function n(){return r.get({url:"/api/payment/config/enabled"})}function e(n){const e="string"==typeof n?{order_no:n}:n;return r.get({url:"/api/payment/check",params:e})}function t(n){return r.get({url:"/api/payment/qrcode",params:{order_no:n}})}export{n as a,e as c,t as g};
